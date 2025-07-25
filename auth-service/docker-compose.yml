@@ -1,0 +1,60 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: auth_service_db
+    environment:
+      POSTGRES_DB: maxon_auth_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - auth-network
+
+  auth-service:
+    build: .
+    container_name: auth_service_app
+    ports:
+      - "8080:8080"
+      - "9090:9090"
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=maxon_auth
+      - DB_PASSWORD=123123
+      - DB_NAME=maxon_auth_db
+      - DB_SSL_MODE=disable
+      - LOG_LEVEL=info
+      - HTTP_PORT=8080
+      - GRPC_PORT=9090
+      - JWT_ACCESS_SECRET=access_dev_secret_Y2x3ZXRlZGhlbGxzaGVsbA==
+      - JWT_REFRESH_SECRET=refresh_dev_secret_RkZMTkpNSk5OTFFLR1Q=
+      - JWT_ISSUER=auth-service-dev
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - auth-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  postgres_data:
+
+networks:
+  auth-network:
+    driver: bridge

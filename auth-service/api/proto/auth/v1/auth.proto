@@ -1,0 +1,187 @@
+syntax = "proto3";
+
+package auth.v1;
+
+option go_package = "social-network/auth-service";
+
+import "google/protobuf/timestamp.proto";
+
+// Auth Service
+service AuthService {
+  // Public endpoints
+  rpc Register(RegisterRequest) returns (RegisterResponse);
+  rpc Login(LoginRequest) returns (LoginResponse);
+  rpc RefreshToken(RefreshTokenRequest) returns (RefreshTokenResponse);
+  rpc VerifyEmail(VerifyEmailRequest) returns (VerifyEmailResponse);
+  rpc InitiatePasswordReset(InitiatePasswordResetRequest) returns (InitiatePasswordResetResponse);
+  rpc ResetPassword(ResetPasswordRequest) returns (ResetPasswordResponse);
+  
+  // Protected endpoints
+  rpc GetCurrentUser(GetCurrentUserRequest) returns (GetCurrentUserResponse);
+  rpc ChangePassword(ChangePasswordRequest) returns (ChangePasswordResponse);
+  rpc Logout(LogoutRequest) returns (LogoutResponse);
+  rpc ValidateToken(ValidateTokenRequest) returns (ValidateTokenResponse);
+  
+  // Admin endpoints
+  rpc AssignRole(AssignRoleRequest) returns (AssignRoleResponse);
+  rpc RevokeRole(RevokeRoleRequest) returns (RevokeRoleResponse);
+  rpc GetUserRoles(GetUserRolesRequest) returns (GetUserRolesResponse);
+}
+
+// Common messages
+message User {
+  string id = 1;
+  string email = 2;
+  string username = 3;
+  string display_name = 4;
+  bool is_verified = 5;
+  bool is_active = 6;
+  google.protobuf.Timestamp created_at = 7;
+  google.protobuf.Timestamp updated_at = 8;
+}
+
+message UserRole {
+  string id = 1;
+  string user_id = 2;
+  string role = 3;
+  google.protobuf.Timestamp granted_at = 4;
+  bool is_active = 5;
+}
+
+message TokenPair {
+  string access_token = 1;
+  string refresh_token = 2;
+  string token_type = 3;
+  int64 expires_in = 4;
+}
+
+// Register
+message RegisterRequest {
+  string email = 1;
+  string username = 2;
+  string display_name = 3;
+  string password = 4;
+}
+
+message RegisterResponse {
+  User user = 1;
+  string message = 2;
+}
+
+// Login
+message LoginRequest {
+  string email = 1;
+  string password = 2;
+}
+
+message LoginResponse {
+  TokenPair tokens = 1;
+  User user = 2;
+}
+
+// Refresh Token
+message RefreshTokenRequest {
+  string refresh_token = 1;
+}
+
+message RefreshTokenResponse {
+  TokenPair tokens = 1;
+}
+
+// Verify Email
+message VerifyEmailRequest {
+  string token = 1;
+}
+
+message VerifyEmailResponse {
+  string message = 1;
+}
+
+// Password Reset
+message InitiatePasswordResetRequest {
+  string email = 1;
+}
+
+message InitiatePasswordResetResponse {
+  string message = 1;
+}
+
+message ResetPasswordRequest {
+  string token = 1;
+  string new_password = 2;
+}
+
+message ResetPasswordResponse {
+  string message = 1;
+}
+
+// Get Current User
+message GetCurrentUserRequest {
+  string access_token = 1;
+}
+
+message GetCurrentUserResponse {
+  User user = 1;
+}
+
+// Change Password
+message ChangePasswordRequest {
+  string access_token = 1;
+  string current_password = 2;
+  string new_password = 3;
+}
+
+message ChangePasswordResponse {
+  string message = 1;
+}
+
+// Logout
+message LogoutRequest {
+  string access_token = 1;
+  string refresh_token = 2;
+}
+
+message LogoutResponse {
+  string message = 1;
+}
+
+// Validate Token
+message ValidateTokenRequest {
+  string access_token = 1;
+}
+
+message ValidateTokenResponse {
+  bool valid = 1;
+  User user = 2;
+  repeated string roles = 3;
+}
+
+// Role Management
+message AssignRoleRequest {
+  string access_token = 1;
+  string user_id = 2;
+  string role = 3;
+}
+
+message AssignRoleResponse {
+  string message = 1;
+}
+
+message RevokeRoleRequest {
+  string access_token = 1;
+  string user_id = 2;
+  string role = 3;
+}
+
+message RevokeRoleResponse {
+  string message = 1;
+}
+
+message GetUserRolesRequest {
+  string access_token = 1;
+  string user_id = 2;
+}
+
+message GetUserRolesResponse {
+  repeated UserRole roles = 1;
+}
